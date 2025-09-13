@@ -70,6 +70,119 @@ def add_noise(coords, scale):
     return coords
 
 
+def add_messiness(coords, messiness_factor, char_boundaries=None):
+    """
+    Adds realistic handwriting messiness to simulate normal to rushed adult writing.
+    
+    Args:
+        coords: stroke coordinates array (N, 3) with [x, y, eos]
+        messiness_factor: float 0.0-1.5, amount of messiness to apply
+                         0.0-1.0: Normal handwriting variations
+                         1.0-1.5: Adult rushed writing (exam conditions)
+        char_boundaries: optional list of indices where characters start/end
+    
+    Returns:
+        modified coordinates with messiness applied
+    """
+    if messiness_factor <= 0.0:
+        return coords
+    
+    coords = np.copy(coords).astype(np.float64)
+    
+    # Get stroke segments (split at pen lifts)
+    stroke_ends = np.where(coords[:, 2] == 1)[0]
+    stroke_starts = np.concatenate([[0], stroke_ends[:-1] + 1])
+    
+    # Determine if we're in normal (0.0-1.0) or rush mode (1.0-1.5)
+    if messiness_factor <= 1.0:
+        # Normal handwriting variations (0.0-1.0)
+        normal_factor = messiness_factor
+        rush_factor = 0.0
+    else:
+        # Adult rush writing (1.0-1.5)
+        normal_factor = 1.0
+        rush_factor = messiness_factor - 1.0
+    
+    # Apply effects to each stroke segment
+    for start, end in zip(stroke_starts, stroke_ends + 1):
+        stroke_coords = coords[start:end]
+        stroke_length = len(stroke_coords)
+        
+        if stroke_length < 2:
+            continue
+        
+        # 1. Forward lean (natural slant from writing speed)
+        base_lean = normal_factor * np.random.uniform(-2, 8) * np.pi / 180
+        rush_lean = rush_factor * np.random.uniform(3, 10) * np.pi / 180  # Additional lean when rushing
+        total_lean = base_lean + rush_lean
+        
+        if abs(total_lean) > 0.01:
+            center_x = np.mean(stroke_coords[:, 0])
+            center_y = np.mean(stroke_coords[:, 1])
+            
+            stroke_coords[:, 0] -= center_x
+            stroke_coords[:, 1] -= center_y
+            
+            cos_a, sin_a = np.cos(total_lean), np.sin(total_lean)
+            x_new = stroke_coords[:, 0] * cos_a - stroke_coords[:, 1] * sin_a
+            y_new = stroke_coords[:, 0] * sin_a + stroke_coords[:, 1] * cos_a
+            
+            stroke_coords[:, 0] = x_new + center_x
+            stroke_coords[:, 1] = y_new + center_y
+        
+        # 2. Baseline drift (gradual up/down movement)
+        baseline_drift = normal_factor * np.random.uniform(-1, 1)
+        rush_drift = rush_factor * np.random.uniform(-2, 2)  # More drift when rushing
+        stroke_coords[:, 1] += baseline_drift + rush_drift
+        
+        # 3. Letter height variations (inconsistent sizing)
+        base_size_var = normal_factor * np.random.uniform(-0.08, 0.08)
+        rush_size_var = rush_factor * np.random.uniform(-0.12, 0.12)  # More variation when rushing
+        size_variation = 1 + base_size_var + rush_size_var
+        
+        center_y = np.mean(stroke_coords[:, 1])
+        stroke_coords[:, 1] = (stroke_coords[:, 1] - center_y) * size_variation + center_y
+        
+        # 4. Horizontal compression (narrower letters from speed)
+        base_compression = normal_factor * 0.05
+        rush_compression = rush_factor * 0.15  # More compression when rushing
+        compression = 1 - (base_compression + rush_compression)
+        
+        center_x = np.mean(stroke_coords[:, 0])
+        stroke_coords[:, 0] = (stroke_coords[:, 0] - center_x) * compression + center_x
+        
+        # 5. Pen pressure fluctuation (stroke width variation simulation)
+        if stroke_length > 3:
+            pressure_var = normal_factor * 0.1 + rush_factor * 0.2
+            # Simulate by adding slight coordinate noise (represents pressure changes)
+            pressure_noise = np.random.normal(0, pressure_var, (stroke_length, 2))
+            stroke_coords[:, :2] += pressure_noise * 0.3  # Subtle effect
+        
+        coords[start:end] = stroke_coords
+    
+    # 6. Letter and word spacing irregularity
+    if len(stroke_starts) > 1:
+        for i in range(1, len(stroke_starts)):
+            # Normal spacing variation
+            base_spacing = normal_factor * np.random.uniform(-2, 4)
+            # Rush spacing variation (more erratic)
+            rush_spacing = rush_factor * np.random.uniform(-4, 8)
+            total_spacing = base_spacing + rush_spacing
+            coords[stroke_starts[i]:] += [total_spacing, 0, 0]
+    
+    # 7. Gradual baseline drift across entire text (rush mode only)
+    if rush_factor > 0 and len(coords) > 10:
+        # Create subtle curve across the entire line
+        x_range = coords[-1, 0] - coords[0, 0]
+        if x_range > 0:
+            drift_amplitude = rush_factor * np.random.uniform(-3, 3)
+            for i in range(len(coords)):
+                progress = (coords[i, 0] - coords[0, 0]) / x_range
+                coords[i, 1] += drift_amplitude * np.sin(progress * np.pi)
+    
+    return coords
+
+
 def encode_ascii(ascii_string):
     """
     encodes ascii string to array of ints
