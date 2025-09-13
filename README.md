@@ -49,14 +49,14 @@ cd H-syn-1.5
 uv install
 
 # Verify installation
-uv run python test_messiness_simple.py
+uv run python tests/test_messiness_simple.py
 ```
 
 ## 💻 Usage
 
 ### Basic Usage
 ```python
-from demo import Hand
+from src.demo import Hand
 
 # Initialize the model
 hand = Hand()
@@ -95,13 +95,13 @@ hand.write(
 ### Command Line Usage
 ```bash
 # Run comprehensive tests
-uv run python test_messiness.py
+uv run python tests/test_messiness.py
 
 # Generate demo samples
-uv run python demo.py
+cd src && uv run python demo.py
 
 # Test simple messiness function
-uv run python test_messiness_simple.py
+uv run python tests/test_messiness_simple.py
 ```
 
 ## 📊 Examples
@@ -180,7 +180,7 @@ A-Z a-z 0-9 ! " # ' ( ) , - . : ; ?
 
 ### Run All Tests
 ```bash
-uv run python test_messiness.py
+uv run python tests/test_messiness.py
 ```
 
 ### Test Categories
@@ -191,21 +191,34 @@ uv run python test_messiness.py
 
 ### Simple Function Testing
 ```bash
-uv run python test_messiness_simple.py
+uv run python tests/test_messiness_simple.py
 ```
 
 ## 📁 Project Structure
 ```
 H-syn-1.5/
-├── demo.py              # Main usage examples and demos
-├── drawing.py           # Core drawing utilities and messiness function
-├── rnn.py              # Neural network architecture
-├── tf_base_model.py    # TensorFlow model base class
-├── test_messiness.py   # Comprehensive test suite
-├── test_messiness_simple.py  # Simple function tests
-├── styles/             # Pre-trained handwriting styles
-├── checkpoints/        # Model checkpoints
-└── img/               # Generated output samples
+├── README.md            # Main documentation
+├── INSTALL.md           # Installation guide
+├── CHANGELOG.md         # Version history
+├── pyproject.toml       # Project configuration
+├── src/                # Core source code
+│   ├── demo.py         # Main usage examples
+│   ├── drawing.py      # Core drawing & messiness function
+│   ├── rnn.py          # Neural network architecture
+│   ├── tf_base_model.py # TensorFlow model base
+│   └── ...             # Other core modules
+├── tests/              # Test suite
+│   ├── test_messiness.py # Comprehensive tests
+│   ├── test_messiness_simple.py # Simple function tests
+│   └── ...             # Other test files
+├── models/             # Model artifacts
+│   ├── checkpoints/    # Training checkpoints
+│   └── styles/         # Pre-trained handwriting styles
+├── examples/           # Generated samples
+│   └── img/           # SVG outputs
+├── data/              # Data files
+└── scripts/           # Utility scripts
+    └── setup_verify.py # Installation verification
 ```
 
 ## 🎨 Generated Samples
@@ -235,7 +248,7 @@ The model generates realistic handwriting samples showing:
 
 1. Fork the repository
 2. Create a feature branch
-3. Test your changes with `uv run python test_messiness.py`
+3. Test your changes with `uv run python tests/test_messiness.py`
 4. Submit a pull request
 
 ## 📝 License

@@ -1,3 +1,4 @@
+# Development directories
 core/
 .serena/
 __pycache__/
@@ -23,3 +24,26 @@ coverage.xml
 .pytest_cache
 .hypothesis
 logs/
+
+# Documentation artifacts (not for GitHub)
+docs/model.xml*
+docs/*.xmlclear*
+
+# Generated outputs (keep in examples/)
+*.svg
+test_*.svg
+
+# Package files
+package-lock.json
+node_modules/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
