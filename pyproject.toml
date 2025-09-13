@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "handwriting-synthesis"
+version = "0.1.0"
+description = "Handwriting synthesis using RNNs"
+readme = "readme.md"
+requires-python = ">=3.9,<3.12"
+dependencies = [
+    "matplotlib>=2.1.0",
+    "pandas>=0.22.0",
+    "scikit-learn>=0.19.1",
+    "scipy>=1.0.0",
+    "svgwrite>=1.1.12",
+    "tensorflow>=2.10.0,<2.16.0",
+    "tensorflow-probability>=0.18.0,<0.23.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "flake8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
